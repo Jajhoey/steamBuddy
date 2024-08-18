@@ -3,7 +3,7 @@ from flask import Flask, url_for, redirect, request, jsonify, render_template
 from dotenv import load_dotenv
 from flask_wtf import FlaskForm, CSRFProtect
 from flask_wtf.form import _Auto
-from wtforms import RadioField, SelectField, StringField, SubmitField
+from wtforms import RadioField, SelectField, SelectMultipleField, StringField, SubmitField
 from wtforms.validators import DataRequired
 import logging
 import os, requests
@@ -26,13 +26,14 @@ class idForm(FlaskForm):
     submit = SubmitField('Go')
 
 class friendListForm(FlaskForm):
+    submit = SubmitField()
+    friends = SelectMultipleField("Friends", choices = [])
     #overriding the __init__ method of the form class
     def __init__(self, choices = None, *args, **kwargs): 
         super(friendListForm, self).__init__(*args, **kwargs)
         if choices:
-            self.friends = RadioField('friends', choices=choices, validators=[DataRequired()])
+            self.friends.choices = choices
     
-    submit = SubmitField()
 
 def getSteamUser(steamids, requestedInfo):
     if requestedInfo == "profiles":
@@ -66,12 +67,16 @@ def friends(id):
 
     profilesResponse = getSteamUser(friends, "profiles")
     profilesResponseJson = profilesResponse.json()
-    data = profilesResponseJson["response"]["players"]
+    
+    friendList = profilesResponseJson["response"]["players"]
+    friends = []
+    for friend in friendList:
+        friends.append((friend["steamid"], friend["personaname"]))
     
     form = friendListForm(choices = friends)
 
     if response.status_code == 200:
-        return render_template("friendslist.html", data = data, form = form)
+        return render_template("friendslist.html", form = form)
     else: return ("Error, API responded with code: " + str(response.status_code))
     
 

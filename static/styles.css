@@ -21,7 +21,6 @@ button{
     border-radius: 10px;
 }
 
-div > .friend{
-    display: inline-flex;
+select {
+    overflow: hidden;
 }
-
