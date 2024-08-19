@@ -7,8 +7,10 @@
     <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
-    <form method="POST">
 
-    </form>
+    {% for friend in selected.choices %}
+        <p>{{ friend.personaname }}</p>
+    {% endfor %}
+
 </body>
 </html>

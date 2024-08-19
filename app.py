@@ -27,7 +27,7 @@ class idForm(FlaskForm):
 
 class friendListForm(FlaskForm):
     submit = SubmitField()
-    friends = SelectMultipleField("Friends", choices = [])
+    friends = SelectMultipleField("Friends", choices = [], validators=[DataRequired()])
     #overriding the __init__ method of the form class
     def __init__(self, choices = None, *args, **kwargs): 
         super(friendListForm, self).__init__(*args, **kwargs)
@@ -75,10 +75,18 @@ def friends(id):
     
     form = friendListForm(choices = friends)
 
-    if response.status_code == 200:
+    if form.is_submitted():
+        selected = form.friends.choices
+        return redirect(url_for("sharedgames", selected = selected))
+
+    elif response.status_code == 200:
         return render_template("friendslist.html", form = form)
     else: return ("Error, API responded with code: " + str(response.status_code))
-    
+
+@app.route("/sharedgames<selected>", methods = ["GET", "POST"])
+def sharedgames(selected):
+    return render_template("sharedgames.html" )
+
 
 #Only use reloader in dev branch
 #app.run(use_reloader=True, debug=True)
