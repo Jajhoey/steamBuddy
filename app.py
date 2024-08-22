@@ -75,18 +75,12 @@ def friends(id):
     
     form = friendListForm(choices = friends)
 
-    if form.is_submitted():
-        selected = form.friends.choices
-        return redirect(url_for("sharedgames", selected = selected))
+    if form.validate_on_submit():
+        return render_template("sharedgames.html", choices = form.friends.data)
 
     elif response.status_code == 200:
         return render_template("friendslist.html", form = form)
     else: return ("Error, API responded with code: " + str(response.status_code))
-
-@app.route("/sharedgames<selected>", methods = ["GET", "POST"])
-def sharedgames(selected):
-    return render_template("sharedgames.html" )
-
 
 #Only use reloader in dev branch
 #app.run(use_reloader=True, debug=True)

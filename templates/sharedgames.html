@@ -7,9 +7,8 @@
     <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
-
-    {% for friend in selected.choices %}
-        <p>{{ friend.personaname }}</p>
+    {% for friend in choices %}
+        <p>{{ loop.index }}</p>
     {% endfor %}
 
 </body>

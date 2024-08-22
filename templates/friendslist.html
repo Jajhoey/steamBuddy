@@ -11,12 +11,15 @@
         <h1>Choose friends to find games in common with.</h1>
         <form method="POST" class = "select-friends">
             {{ form.hidden_tag() }}
-
+            
             {% for friend in form.friends %}
-                <input class="form-check-input" type="checkbox" label = "{{ friend.label }}" {% if friend.selected %}selected{% endif %}>
+                <input class="form-check-input" type="checkbox" id="friend-{{ loop.index }}" value="{{ friend.data }}" label = "{{ friend.label }}" {% if friend.checked %}{{choices.append(friend)}}{% endif %}>
+
+            
             {% endfor %}
             
             <p>{{ form.submit() }}</p>
+            <!--Debugging-->
         </form>
     </body>
 </html>
