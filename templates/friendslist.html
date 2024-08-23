@@ -13,9 +13,8 @@
             {{ form.hidden_tag() }}
             
             {% for friend in form.friends %}
-                <input class="form-check-input" type="checkbox" id="friend-{{ loop.index }}" value="{{ friend.data }}" label = "{{ friend.label }}" {% if friend.checked %}{{choices.append(friend)}}{% endif %}>
-
-            
+                <input type="checkbox" id="friend-{{ loop.index }}" value="{{ friend.steamid }}" label = "{{ friend.name }}" {% if friend.checked %}{{ friend.selected }}{% endif %}>
+                <label>{{ friend.data.personaname }}</label>
             {% endfor %}
             
             <p>{{ form.submit() }}</p>

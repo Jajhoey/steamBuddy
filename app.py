@@ -71,16 +71,23 @@ def friends(id):
     friendList = profilesResponseJson["response"]["players"]
     friends = []
     for friend in friendList:
-        friends.append((friend["steamid"], friend["personaname"]))
-    
+        friend["selected"] = False
+        friends.append(friend)
+        
     form = friendListForm(choices = friends)
 
-    if form.validate_on_submit():
-        return render_template("sharedgames.html", choices = form.friends.data)
+    if form.is_submitted():
+        choices = []
+        for friend in friends:
+            if friend["selected"]:
+                choices.append(friend)
+        return render_template("sharedgames.html", choices = choices)
 
     elif response.status_code == 200:
         return render_template("friendslist.html", form = form)
-    else: return ("Error, API responded with code: " + str(response.status_code))
+    
+    else: 
+        return ("Error, API responded with code: " + str(response.status_code))
 
 #Only use reloader in dev branch
 #app.run(use_reloader=True, debug=True)
