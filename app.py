@@ -26,7 +26,7 @@ class idForm(FlaskForm):
     submit = SubmitField('Go')
 
 class friendListForm(FlaskForm):
-    submit = SubmitField()
+    submit = SubmitField(validators=[DataRequired()])
     friends = SelectMultipleField("Friends", choices = [], validators=[DataRequired()])
     #overriding the __init__ method of the form class
     def __init__(self, choices = None, *args, **kwargs): 
@@ -69,19 +69,15 @@ def friends(id):
     profilesResponseJson = profilesResponse.json()
     
     friendList = profilesResponseJson["response"]["players"]
-    friends = []
+    choices = []
     for friend in friendList:
-        friend["selected"] = False
-        friends.append(friend)
+        choices.append(friend)
         
-    form = friendListForm(choices = friends)
+    form = friendListForm(choices = choices)
 
     if form.is_submitted():
-        choices = []
-        for friend in friends:
-            if friend["selected"]:
-                choices.append(friend)
-        return render_template("sharedgames.html", choices = choices)
+        selected = form.friends.data
+        return render_template("sharedgames.html", selected = selected)
 
     elif response.status_code == 200:
         return render_template("friendslist.html", form = form)

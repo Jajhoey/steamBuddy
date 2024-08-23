@@ -7,7 +7,10 @@
     <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
-    {% for friend in choices %}
+    {{ selected|length }}
+    
+
+    {% for friend in selected %}
         <p>{{ friend.personaname }}</p>
     {% endfor %}
 
