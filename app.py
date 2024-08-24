@@ -1,12 +1,10 @@
-from dataclasses import fields
-from flask import Flask, url_for, redirect, request, jsonify, render_template 
+from flask import Flask, jsonify, url_for, redirect, render_template, session 
 from dotenv import load_dotenv
 from flask_wtf import FlaskForm, CSRFProtect
-from flask_wtf.form import _Auto
-from wtforms import RadioField, SelectField, SelectMultipleField, StringField, SubmitField
+from wtforms import SelectMultipleField, StringField, SubmitField
 from wtforms.validators import DataRequired
 import logging
-import os, requests
+import os, requests, json
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -46,12 +44,14 @@ def getSteamUser(steamids, requestedInfo):
         response = requests.get(url)
         return response
 
+def type_of(param):
+    return type(param)
+
 @app.route("/", methods = ['GET', 'POST'])
 def home():
     form = idForm()
     if form.validate_on_submit():
-        #Was assigning the id field of the form instaed of the actual string, adding .data fixed this issue
-        id = form.id.data 
+        id = form.id.data #.data accesses the string data submitted in the form's field
         return redirect(url_for('friends', id = id))
     
     return render_template("index.html", form = form) 
@@ -70,6 +70,7 @@ def friends(id):
     
     friendList = profilesResponseJson["response"]["players"]
     choices = []
+    
     for friend in friendList:
         choices.append(friend)
         
@@ -77,13 +78,23 @@ def friends(id):
 
     if form.is_submitted():
         selected = form.friends.data
-        return render_template("sharedgames.html", selected = selected)
+
+        return render_template("sharedgames.html", type_of = type_of, form = form,  selected = selected)
+        #session["selection"] = form
+        #return redirect(url_for("sharedgames"))
 
     elif response.status_code == 200:
         return render_template("friendslist.html", form = form)
     
     else: 
         return ("Error, API responded with code: " + str(response.status_code))
+
+@app.route("/sharedgames", methods = ["GET"])
+def sharedgames():
+    selected = session.get('selection')
+    selected = selected.friends
+    return render_template("sharedgames.html", selected = selected, data = data)
+
 
 #Only use reloader in dev branch
 #app.run(use_reloader=True, debug=True)
