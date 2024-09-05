@@ -7,26 +7,13 @@
     <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
-    <form method = "GET">
-        {{ form.hidden_tag() }}
-        {% for friend in selected %}
-            {{friend.personaname}}
-        {% endfor %}
+    <h3>Games shared between selected friends: </h3>
 
-    </form>
+    {{f}}
 
-    {% for f in form.friends %}
-    {%endfor%}
-    <h6>Debugging</h6>
-    <p>Type: {{ type_of(form.friends.data) }}</p>
-    <p>Length: {{form.friends.data|length}}</p>
-    
     <ul>
-        {% for friend in selected %}
-            Name: {{ friend.steamid}}
-            Type: {{ type_of(friend) }}
-            <br>
-            {{friend}}
+        {% for g in games %}
+            <li>{{ g }}</li>
         {% endfor %}
     </ul>
 

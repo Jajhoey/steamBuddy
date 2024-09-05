@@ -3,7 +3,9 @@ from dotenv import load_dotenv
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import SelectMultipleField, StringField, SubmitField
 from wtforms.validators import DataRequired
+from wtforms.widgets import *
 import logging
+
 import os, requests, json
 
 logging.basicConfig(level=logging.ERROR)
@@ -19,18 +21,26 @@ app.config['SECRET_KEY'] = SECRET_KEY
 #Cross site forgery protection needed to use FlaskWTF
 csrf = CSRFProtect(app)
 
+
+#making a custom Field for WTForms
+#class MultiCheckField():
+ #   def __init__(self, label, choices, **kwargs):
+  #      super(MultiCheckField, self).__init__(*args, kwargs**)
+
+
 class idForm(FlaskForm):
     id = StringField('id', validators=[DataRequired()])
     submit = SubmitField('Go')
 
 class friendListForm(FlaskForm):
-    submit = SubmitField(validators=[DataRequired()])
-    friends = SelectMultipleField("Friends", choices = [], validators=[DataRequired()])
+    submit = SubmitField()
+    friends = SelectMultipleField("Friends", choices = [], widget=TableWidget(with_table_tag=False), option_widget=CheckboxInput())
     #overriding the __init__ method of the form class
-    def __init__(self, choices = None, *args, **kwargs): 
+    def __init__(self, choices = None, count = 0, *args, **kwargs): 
         super(friendListForm, self).__init__(*args, **kwargs)
         if choices:
             self.friends.choices = choices
+        
     
 
 def getSteamUser(steamids, requestedInfo):
@@ -43,14 +53,22 @@ def getSteamUser(steamids, requestedInfo):
         url = f"http://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key={api_key}&steamid={steamids}"
         response = requests.get(url)
         return response
-
+    
+    elif requestedInfo == "games":
+        url = f"http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={api_key}&steamid={steamids}&format=json&include_appinfo=true"
+        response = requests.get(url)
+        return response
+    
 def type_of(param):
     return type(param)
 
 @app.route("/", methods = ['GET', 'POST'])
 def home():
     form = idForm()
+
+    
     if form.validate_on_submit():
+        session["my_id"] = form.id.data
         id = form.id.data #.data accesses the string data submitted in the form's field
         return redirect(url_for('friends', id = id))
     
@@ -60,8 +78,8 @@ def home():
 def friends(id):
     response = getSteamUser(id, "friends")
     responseJson = response.json() #json response needs to be parsed to python dict.
-    
     friends = []
+    
     for friend in responseJson["friendslist"]["friends"]: #accessing the inner "friends" dict
         friends.append(friend["steamid"])
 
@@ -72,16 +90,14 @@ def friends(id):
     choices = []
     
     for friend in friendList:
-        choices.append(friend)
-        
+        name = friend["personaname"]
+        choices.append((id, name))
+    
     form = friendListForm(choices = choices)
 
-    if form.is_submitted():
-        selected = form.friends.data
-
-        return render_template("sharedgames.html", type_of = type_of, form = form,  selected = selected)
-        #session["selection"] = form
-        #return redirect(url_for("sharedgames"))
+    if form.validate_on_submit():
+        session["selected"] = form.friends.data
+        return redirect(url_for("sharedgames"))
 
     elif response.status_code == 200:
         return render_template("friendslist.html", form = form)
@@ -91,9 +107,20 @@ def friends(id):
 
 @app.route("/sharedgames", methods = ["GET"])
 def sharedgames():
-    selected = session.get('selection')
-    selected = selected.friends
-    return render_template("sharedgames.html", selected = selected, data = data)
+    friends = session.get("selected")
+    games = []
+
+    for f in friends:
+        res = getSteamUser(f, "games")
+        res = res.json()
+
+        #the response returns a list of games, using the index of the attriubte I want to be included
+        #"name" index = 1
+
+        for g in res["response"]["games"]:
+            games.append(g["name"])
+    
+    return render_template("sharedgames.html", games = games, f = friends)
 
 
 #Only use reloader in dev branch
