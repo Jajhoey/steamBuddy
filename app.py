@@ -36,7 +36,7 @@ class friendListForm(FlaskForm):
     submit = SubmitField()
     friends = SelectMultipleField("Friends", choices = [], widget=TableWidget(with_table_tag=False), option_widget=CheckboxInput())
     #overriding the __init__ method of the form class
-    def __init__(self, choices = None, count = 0, *args, **kwargs): 
+    def __init__(self, choices = None, *args, **kwargs): 
         super(friendListForm, self).__init__(*args, **kwargs)
         if choices:
             self.friends.choices = choices
@@ -66,7 +66,6 @@ def type_of(param):
 def home():
     form = idForm()
 
-    
     if form.validate_on_submit():
         session["my_id"] = form.id.data
         id = form.id.data #.data accesses the string data submitted in the form's field
@@ -90,14 +89,24 @@ def friends(id):
     choices = []
     
     for friend in friendList:
-        name = friend["personaname"]
-        choices.append((id, name))
-    
+        choices.append((friend["steamid"], friend["personaname"]))
+        
     form = friendListForm(choices = choices)
 
-    if form.validate_on_submit():
-        session["selected"] = form.friends.data
-        return redirect(url_for("sharedgames"))
+    if form.validate_on_submit(): #Form submitted
+        games = []
+        friends = form.friends.data
+        friends.append(id)
+        
+        for f in friends:
+            res = getSteamUser(f, "games")
+            res = res.json()
+
+            for g in res["response"]["games"]:
+                games.append(g["name"])
+        
+        return render_template("sharedgames.html", games = games, id = id, friends = friends)
+        #return redirect(url_for("sharedgames", selected = form.friends.data))
 
     elif response.status_code == 200:
         return render_template("friendslist.html", form = form)
@@ -105,8 +114,9 @@ def friends(id):
     else: 
         return ("Error, API responded with code: " + str(response.status_code))
 
-@app.route("/sharedgames", methods = ["GET"])
-def sharedgames():
+#This route is prob unnecessary 
+@app.route("/sharedgames<selected>", methods = ["GET"])
+def sharedgames(selected):
     friends = session.get("selected")
     games = []
 
@@ -116,11 +126,11 @@ def sharedgames():
 
         #the response returns a list of games, using the index of the attriubte I want to be included
         #"name" index = 1
-
+        
         for g in res["response"]["games"]:
             games.append(g["name"])
     
-    return render_template("sharedgames.html", games = games, f = friends)
+    return render_template("sharedgames.html", games = games, friends = selected)
 
 
 #Only use reloader in dev branch

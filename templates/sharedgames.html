@@ -7,10 +7,8 @@
     <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
-    <h3>Games shared between selected friends: </h3>
-
-    {{f}}
-
+    <h3>Games shared between you and selected friends: </h3>
+    Selected: {{friends}}
     <ul>
         {% for g in games %}
             <li>{{ g }}</li>

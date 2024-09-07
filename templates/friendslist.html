@@ -12,9 +12,12 @@
         <form method="POST" class = "select">
             {{ form.hidden_tag() }}
         
-            {{ form.friends }}
-            {{ form.submit() }}
-            
+            <div class = "friendForm">
+                {{ form.friends }}
+            </div>
+            <div>
+                {{ form.submit }}
+            </div>
             
         </form>
     </body>
